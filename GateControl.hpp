@@ -94,35 +94,29 @@ extern string gCurrentTime;
 //	TO DO
 //
 //****************************************************************************************
-
-
 bool GateControl::accessAllowed(CardNumber number)
 {
 
-	//	TO DO
-
-	bool condition = false;
-	TransactionVector temp;
-
-	for(int i = 0; i < transactionVector_.size(); ++i)
+	//if by chance the number is not found, then we will send the number that was attempted
+	//to log in and since the number is nonexistent, we push "***" as the name and the rest of the
+	//arguments as normal with it resulting as false.
+	if(!authorizationMap_.count(number))
 	{
-			if(transactionVector_[i].number_ == number)
-			{
-				temp.push_back(transactionVector_[i]);
-			}
+		transactionVector_.push_back(Transaction(number, "***", gCurrentDate, gCurrentTime, false));
 	}
 
-		if(temp[0].date_ == gCurrentDate && authorizationMap_[number].startTime_ == gCurrentTime)
-		{
-			condition = true;
-			transactionVector_.push_back(Transaction(number, authorizationMap_[number].name_, gCurrentDate, gCurrentTime, condition));
-			return condition;
-		}
-	transactionVector_.push_back(Transaction(number, authorizationMap_[number].name_, gCurrentDate, gCurrentTime, condition));
+	//if they correspond with the times, it will record true and if not it will record as false.
+	else if(authorizationMap_[number].endTime_ >= gCurrentTime && authorizationMap_[number].startTime_ <= gCurrentTime)
+	{
+	//	condition = true;
+		transactionVector_.push_back(Transaction(number, authorizationMap_[number].name_, gCurrentDate, gCurrentTime, true));
+		return true;
+	}
 
+	else
+		transactionVector_.push_back(Transaction(number, authorizationMap_[number].name_, gCurrentDate, gCurrentTime, false));
 
-	return condition;
-
+	return false;
 }
 
 
@@ -130,29 +124,13 @@ bool GateControl::addAuthorization(CardNumber number, const string& name, const 
 {
 
 	//	TO DO
+	// if the number is found then we return false, cannot add same keys!
+	if(authorizationMap_.count(number)) { return false; }
 
-	bool success = true;
+		//add it if there is no similar key and return true.
+		authorizationMap_.insert(std::pair(number, Authorization(number, name, startTime, endTime)));
 
-	if(authorizationMap_.count(number))
-	{
-		success = false;
-
-		return success;
-	}
-
-	//auto found = authorizationMap_.find(number);
-
-	//if(found == authorizationMap_.end())
-	//{
-	//	return false;
-	//}
-
-	//authorizationMap_.insert(std::pair<CardNumber, Authorization>(number, Authorization(number, name, startTime, endTime)));
-
-  authorizationMap_[number] = Authorization(number, name, startTime, endTime);
-
-	return success;
-
+	return true;
 }
 
 
@@ -160,16 +138,15 @@ bool GateControl::changeAuthorization(CardNumber number, const string& name, con
 {
 
 	//	TO DO
+	//if the number is NOT found, then we return false indicating a change could not
+	//occur.
 	if(!authorizationMap_.count(number)) { return false; }
-	//
-	// auto node = authorizationMap_.extract(number);
-	// node.Authorization(number, name, startTime, endTime);
-	// authorizationMap_.insert(std::move(node));
 
+	//we chance the values of that specific card number with the arguments passed.
+	//and return true.
 	authorizationMap_[number] = Authorization(number, name, startTime, endTime);
 
 	return true;
-
 }
 
 
@@ -177,40 +154,41 @@ bool GateControl::deleteAuthorization(CardNumber number)
 {
 
 	//	TO DO
+	//if the number was not found, return false as you cannot delete something that
+	//is not there.
 	if(!authorizationMap_.count(number)) { return false; }
 
+	//erasing the corresponding key.
 	authorizationMap_.erase(number);
 
 	return true;
-
 }
 
-
+//missing all authorization records code?//maybe copy the authorizationMap_ into a vector (loop)
 void GateControl::getAllAuthorizations(AuthorizationVector& authorizationVector)
 {
 
 	//	TO DO
-	if(!authorizationMap_.empty()) { authorizationVector.clear(); }
+	//if the vector is not empty, then we clear it
+	if(!authorizationVector.empty()) { authorizationVector.clear(); }
 
-	//for(int i = 0; i < authorizationMap_.size(); ++i)
-	//{
-	//	authorizationVector.push_back(authorizationMap_[i]);
-	//}
-
-	for(auto elem :authorizationMap_)
+	//pushing elements into the vector.
+	for(auto elem : authorizationMap_)
 	{
 		authorizationVector.push_back(elem.second);
 	}
 
 }
 
-
+//maybe copy the transactionsvector_ (one noted on top)
 void GateControl::getAllTransactions(TransactionVector& transactionVector)
 {
 
 	//	TO DO
-	if(transactionVector_.empty()) { transactionVector.clear(); }
+	//i vector is NOT empty, then we clear the transaction vector.
+	if(!transactionVector.empty()) { transactionVector.clear(); }
 
+	//push the contents of our vector.
 	for(int i = 0; i < transactionVector_.size(); ++i)
 	{
 		transactionVector.push_back(transactionVector_[i]);
@@ -223,13 +201,12 @@ bool GateControl::getCardAuthorization(CardNumber number, Authorization& authori
 {
 
 	//	TO DO
-	if(!authorizationMap_.count(number)) { return false; }
-//changnig authorizationVector_ to authorizationMap_ since adding to the authorization record
+	//if the number is not found, then we return false.
+		if(!authorizationMap_.count(number)) { return false; }
 
-	//authorizationMap_.insert(std::pair<CardNumber,Authorization>(number, authorization)); // Authorization(authorization.number_, authorization.name_, authorization.startTime, authorization.endTime)
+	//we push the corresponding authorization into the 'authorization'.
 	authorization = Authorization(authorizationMap_[number].number_, authorizationMap_[number].name_, authorizationMap_[number].startTime_, authorizationMap_[number].endTime_);
 	return true;
-
 }
 
 
@@ -238,10 +215,12 @@ void GateControl::getCardTransactions(CardNumber number, TransactionVector& tran
 
 	//	TO DO
 
-	if(transactionVector_.empty()) { transactionVector.clear(); }
+	//check if the vector is empty.
+	if(transactionVector.empty()) { transactionVector.clear(); }
 	//first to get the transactions from the number_
 	for(int i = 0; i < transactionVector_.size(); ++i)
 	{
+		//push the matching numbers into the vector.
 		if(transactionVector_[i].number_ == number)
 		{
 			transactionVector.push_back(transactionVector_[i]);
