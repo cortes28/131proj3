@@ -4,5 +4,5 @@
 MUST EDIT WITH YOUR OWN NAME AND GROUP MEMBER'S NAME AND EMAIL ID's IN THE FOLLOWING FORMAT
 
 Group members:
-- Ada Lovelace adalovelace@csu.fullerton.edu
-- Charles Babbage charlesbab@csu.fullerton.edu
+- Bryan Cortes cortes28@csu.fullerton.edu
+- Jesimiel Ray Manguiat rayjes@csu.fullerton.edu
